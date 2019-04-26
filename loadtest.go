@@ -14,12 +14,12 @@ type load struct {
 	responseHandler func(*http.Response)
 }
 
-type Request struct {
-	Method  string
-	Address string
-	Request []byte
-	Headers map[string]string
-	Ctx     *context.Context
+type request struct {
+	method  string
+	address string
+	request []byte
+	headers *map[string]string
+	ctx     context.Context
 }
 
 func New(client *http.Client, responseHandler func(*http.Response)) load {
@@ -29,17 +29,17 @@ func New(client *http.Client, responseHandler func(*http.Response)) load {
 	}
 }
 
-func (l *load) Setup(req Request) error {
-	request, err := http.NewRequest(req.Method, req.Address, bytes.NewBuffer(req.Request))
+func (l *load) Setup(req request) error {
+	request, err := http.NewRequest(req.method, req.address, bytes.NewBuffer(req.request))
 	if err != nil {
 		return err
 	}
 
-	for k, v := range req.Headers {
+	for k, v := range *req.headers {
 		request.Header.Set(k, v)
 	}
 
-	request.WithContext(*req.Ctx)
+	request.WithContext(req.ctx)
 
 	l.request = request
 	return nil
@@ -57,5 +57,15 @@ func (l *load) Send(intervalInSeconds uint) {
 			}
 			l.responseHandler(resp)
 		}
+	}
+}
+
+func NewRequest(method, address string, req []byte, headers *map[string]string, ctx context.Context) request {
+	return request{
+		method:  method,
+		address: address,
+		request: req,
+		headers: headers,
+		ctx:     ctx,
 	}
 }
