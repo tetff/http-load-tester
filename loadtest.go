@@ -14,7 +14,7 @@ type Config struct {
 	IntervalMaxMillisec int
 }
 
-type load struct {
+type Load struct {
 	client          *http.Client
 	request         *http.Request
 	responseHandler func(*http.Response)
@@ -22,8 +22,8 @@ type load struct {
 	c *Config
 }
 
-func New(client *http.Client, responseHandler func(*http.Response)) load {
-	return load{
+func New(client *http.Client, responseHandler func(*http.Response)) *Load {
+	return &Load{
 		client:          client,
 		responseHandler: responseHandler,
 	}
@@ -45,12 +45,12 @@ func DefaultRandomConfig() *Config {
 	}
 }
 
-func (l *load) Setup(req *http.Request, c *Config) {
+func (l *Load) Setup(req *http.Request, c *Config) {
 	l.request = req
 	l.c = c
 }
 
-func (l *load) Send(stop chan bool) {
+func (l *Load) Send(stop chan bool) {
 	var ticker *time.Ticker
 	if l.c.Random {
 		if l.c.IntervalMinMillisec > l.c.IntervalMaxMillisec {
@@ -76,7 +76,7 @@ func (l *load) Send(stop chan bool) {
 
 }
 
-func (l *load) Random() int {
+func (l *Load) Random() int {
 	rand.Seed(time.Now().UnixNano())
 	return l.c.IntervalMinMillisec + rand.Intn(l.c.IntervalMaxMillisec-l.c.IntervalMinMillisec)
 }
